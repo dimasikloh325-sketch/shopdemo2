@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Shop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); margin: 0; padding: 20px; }
+        .item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        button { background: #3390ec; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Магазин одежды (Demo)</h2>
+    <div id="catalog">
+        <div class="item">
+            <span>Футболка Oversize — 2500₽</span>
+            <button onclick="addToCart('Футболка', 2500)">Добавить</button>
+        </div>
+        <div class="item">
+            <span>Худи Basic — 4500₽</span>
+            <button onclick="addToCart('Худи', 4500)">Добавить</button>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Расширяем на все окно
+
+        let cart = [];
+
+        function addToCart(name, price) {
+            cart.push({name, price});
+            tg.MainButton.text = `Оформить заказ (${cart.length})`;
+            tg.MainButton.show();
+        }
+
+        // При нажатии на главную кнопку ТГ отправляем данные боту
+        tg.onEvent('mainButtonClicked', function(){
+            tg.sendData(JSON.stringify(cart));
+        });
+    </script>
+</body>
+</html>
