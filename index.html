@@ -1,59 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Demo Clothing Store</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-     body { font-family: 'Segoe UI', sans-serif; padding: 15px; background: #f4f4f9; }
-.item { 
-    background: white; 
-    padding: 15px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-    margin-bottom: 15px;
-    display: flex; flex-direction: column; align-items: center; text-align: center;
-}
-.item img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
-.item span { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; }
-button { 
-    background: #0088cc; width: 100%; border-radius: 10px; 
-    font-weight: bold; transition: 0.3s; 
-}
-button:active { transform: scale(0.95); }
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #222222;
+            --tg-theme-button-color: #3390ec;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-hint-color: #707579;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            margin: 0; padding: 0;
+            padding-bottom: 80px; /* Место под нижнее меню */
+        }
+
+        /* Шапка */
+        header {
+            padding: 20px; text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* Экраны (Секции) */
+        .screen { display: none; padding: 15px; }
+        .screen.active { display: block; }
+
+        /* Карточки товаров */
+        .product-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+        }
+        .product-card {
+            border: 1px solid #eee; border-radius: 12px; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .product-img {
+            width: 100%; aspect-ratio: 1/1; background: #f9f9f9;
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+        }
+        .product-info { padding: 10px; flex-grow: 1; }
+        .price { font-weight: bold; color: var(--tg-theme-button-color); }
+        
+        .add-btn {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none; width: 100%; padding: 8px;
+            border-radius: 8px; margin-top: 5px; cursor: pointer;
+        }
+
+        /* Нижнее меню (Навигация) */
+        .nav-bar {
+            position: fixed; bottom: 0; width: 100%;
+            background: #fff; border-top: 1px solid #eee;
+            display: flex; justify-content: space-around; padding: 10px 0;
+        }
+        .nav-item {
+            background: none; border: none; color: var(--tg-theme-hint-color);
+            font-size: 12px; cursor: pointer;
+        }
+        .nav-item.active { color: var(--tg-theme-button-color); font-weight: bold; }
+
+        /* Корзина */
+        .cart-item {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
-    <h2>Магазин одежды (Demo)</h2>
-    <div id="catalog">
-        <div class="item">
-            <span>Футболка Oversize — 2500₽</span>
-            <button onclick="addToCart('Футболка', 2500)">Добавить</button>
+
+<header>
+    <h3 id="header-title">Каталог одежды</h3>
+</header>
+
+<div id="catalog-screen" class="screen active">
+    <div class="product-grid">
+        <div class="product-card">
+            <div class="product-img">👕</div>
+            <div class="product-info">
+                <div>Футболка Oversize</div>
+                <div class="price">2 500 ₽</div>
+                <button class="add-btn" onclick="addToCart('Футболка', 2500)">В корзину</button>
+            </div>
         </div>
-        <div class="item">
-            <span>Худи Basic — 4500₽</span>
-            <button onclick="addToCart('Худи', 4500)">Добавить</button>
+        <div class="product-card">
+            <div class="product-img">🧥</div>
+            <div class="product-info">
+                <div>Худи Basic</div>
+                <div class="price">4 500 ₽</div>
+                <button class="add-btn" onclick="addToCart('Худи', 4500)">В корзину</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Расширяем на все окно
+<div id="cart-screen" class="screen">
+    <div id="cart-list">Корзина пуста</div>
+    <hr>
+    <div id="cart-total"></div>
+</div>
 
-        let cart = [];
+<div id="profile-screen" class="screen">
+    <p>👋 Привет, <span id="user-name">Клиент</span>!</p>
+    <p>Тут будет история твоих заказов и бонусы.</p>
+</div>
 
-        function addToCart(name, price) {
-            cart.push({name, price});
-            tg.MainButton.text = `Оформить заказ (${cart.length})`;
+<div class="nav-bar">
+    <button class="nav-item active" onclick="showScreen('catalog', this)">🛍 Магазин</button>
+    <button class="nav-item" onclick="showScreen('cart', this)">🛒 Корзина</button>
+    <button class="nav-item" onclick="showScreen('profile', this)">👤 Профиль</button>
+</div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let cart = [];
+    document.getElementById('user-name').innerText = tg.initDataUnsafe.user?.first_name || "Покупатель";
+
+    function showScreen(screenId, btn) {
+        // Скрываем все экраны
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        // Снимаем выделение с кнопок
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        
+        // Показываем нужный
+        document.getElementById(screenId + '-screen').classList.add('active');
+        btn.classList.add('active');
+
+        // Меняем заголовок
+        const titles = {catalog: 'Каталог одежды', cart: 'Корзина', profile: 'Мой профиль'};
+        document.getElementById('header-title').innerText = titles[screenId];
+    }
+
+    function addToCart(name, price) {
+        cart.push({name, price});
+        updateCart();
+        tg.HapticFeedback.impactOccurred('medium'); // Виброотклик при добавлении
+    }
+
+    function updateCart() {
+        const cartList = document.getElementById('cart-list');
+        const cartTotal = document.getElementById('cart-total');
+        
+        if (cart.length === 0) {
+            cartList.innerHTML = "Корзина пуста";
+            tg.MainButton.hide();
+        } else {
+            cartList.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <span>${item.name}</span>
+                    <span>${item.price} ₽</span>
+                </div>
+            `).join('');
+            
+            let total = cart.reduce((sum, item) => sum + item.price, 0);
+            cartTotal.innerHTML = `<strong>Итого: ${total} ₽</strong>`;
+            
+            tg.MainButton.text = "ОФОРМИТЬ ЗАКАЗ";
             tg.MainButton.show();
         }
+    }
 
-        // При нажатии на главную кнопку ТГ отправляем данные боту
-        tg.onEvent('mainButtonClicked', function(){
-            tg.sendData(JSON.stringify(cart));
-        });
-    </script>
+    tg.onEvent('mainButtonClicked', function() {
+        tg.sendData(JSON.stringify(cart)); // Отправляем данные боту
+    });
+</script>
+
 </body>
-
 </html>
